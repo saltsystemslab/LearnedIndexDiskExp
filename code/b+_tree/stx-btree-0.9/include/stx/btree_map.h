@@ -554,6 +554,10 @@ public:
     {
 	return tree.erase(iter);
     }
+public:
+    size_t get_tree_size() {
+        return tree.get_tree_size();
+    }
 
 #ifdef BTREE_TODO
     /// Erase all key/data pairs in the range [first,last). This function is
