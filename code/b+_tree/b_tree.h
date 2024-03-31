@@ -18,10 +18,11 @@
 #include "vector"
 #include <chrono>
 
-#define Profiling 1
+#define Profiling 0
 
 class BTree {
     /// Start - In-main memory B+-tree for the case, all inners nodes are in main memory
+    public:
     struct traits_inner : stx::btree_default_map_traits<KeyType, int>
     {
         static const bool       selfverify = false;
@@ -468,6 +469,12 @@ public:
                     next_point += 1;
                     return v;
                 }
+                KeyType key() {
+                    return current_leaf_node_items[next_point].key;
+                }
+                ValueType value() {
+                    return current_leaf_node_items[next_point].value;
+                }
         };
 
         IndexIterator get_index_iterator(Condition cond, int *c) {
@@ -533,6 +540,25 @@ public:
             *c = 0;
             if (hybrid_mode == ALL_DISK) return lookup_disk(cond, c);
             else if (hybrid_mode == LEAF_DISK) return bookup_leaf_disk(cond, c);
+        }
+
+        bool lookup_value(KeyType key, ValueType *v, int *c) {
+            Condition cond;
+            cond.include_max = cond.include_min = true;
+            cond.max = cond.min = key;
+            *c = 0;
+            if (hybrid_mode == ALL_DISK) {
+                abort();
+            }
+            else if (hybrid_mode == LEAF_DISK) {
+                IndexIterator ii = obtain_for_leaf_disk(cond, c);
+                while (ii.has_next(c)) {
+                    *v = ii.next();
+                    return true;
+                }
+                return false;
+            }
+            return false;
         }
 
         bool scan_disk(ValueType *results, Condition cond, int len, int *c) {
@@ -673,5 +699,12 @@ public:
 
         void print_tree_level() {
             printf("level: %d\n", metanode.level);
+        }
+
+        uint64_t bytes_read() {
+            return 0;
+        }
+        uint64_t bytes_written() {
+            return 0;
         }
 };
