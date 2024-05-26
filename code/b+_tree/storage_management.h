@@ -143,4 +143,9 @@ class StorageManager {
             return;
         }
 
+        void sync_to_disk() {
+            fflush(fp);
+            fsync(fileno(fp));
+        }
+
 };

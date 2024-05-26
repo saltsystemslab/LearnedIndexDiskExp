@@ -73,6 +73,10 @@ class BTree {
         }
 
 public:
+    void flush_to_disk() {
+        sm->sync_to_disk();
+    }
+
     size_t get_inner_size() {
             if (hybrid_mode == LEAF_DISK) {
                 return inner_btree.get_tree_size();
