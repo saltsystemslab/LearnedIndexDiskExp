@@ -291,6 +291,8 @@ class Alex {
       if (hybrid_mode == ALL_DISK) {
           return 0;
       } else {
+          return size_after_bulk_load_;
+          #if 0
           size_t total_size = 0;
           // NOTE: next() function has been updated
           for (NodeIterator node_it = NodeIterator(this); !node_it.is_end();
@@ -299,6 +301,7 @@ class Alex {
                  total_size += node_it.current()->node_size();
           }
           return total_size;
+          #endif
       }
   }
 
@@ -1768,16 +1771,19 @@ void init_model_node_from_disk(model_node_type *model_node, ModelHeaderOnDisk mh
     update_superroot_key_domain();
 //    link_all_data_nodes();
 #if DiskSetting
-    std::cout << RootNodeDisk.flag << std::endl;
+    // std::cout << RootNodeDisk.flag << std::endl;
     metanode.root_block_id = RootNodeDisk.block;
     metanode.root_offset = RootNodeDisk.offset;
     metanode.is_leaf = RootNodeDisk.flag;
     metanode.dup_root = RootNodeDisk.duplication_factor_;
     sync_metanode();
+    size_after_bulk_load_ = 0;
     for (NodeIterator node_it = NodeIterator(this); !node_it.is_end();
         node_it.next()) {
-        if (node_it.current()->is_leaf_ && hybrid_mode == LEAF_DISK)
+        if (node_it.current()->is_leaf_ && hybrid_mode == LEAF_DISK) {
+          size_after_bulk_load_ += node_it.current()->node_size();
             delete_node(node_it.current());
+        }
         else if (hybrid_mode == ALL_DISK) delete_node(node_it.current());
     }
 #endif
@@ -1785,6 +1791,7 @@ void init_model_node_from_disk(model_node_type *model_node, ModelHeaderOnDisk mh
   }
 
  private:
+  uint64_t size_after_bulk_load_ = 0;
   // Only call this after creating a root node
   void create_superroot() {
     if (!root_node_) return;
